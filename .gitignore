@@ -1,0 +1,27 @@
+# --- PondCast 特定忽略 ---
+# 忽略存储接收文件的文件夹
+received/
+# 忽略发布的共享文件夹
+release/
+# 忽略本地配置文件 (包含个人端口设置等)
+config.json
+
+# --- Python 标准忽略 ---
+# 字节码编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- PyInstaller 打包产物 ---
+build/
+dist/
+*.spec
+
+# --- IDE 和 编辑器配置 ---
+.idea/
+.vscode/
+*.swp
+
+# --- 操作系统生成文件 ---
+.DS_Store
+Thumbs.db

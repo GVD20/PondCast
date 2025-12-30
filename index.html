@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PondCast - 局域网文件池</title>
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-dark: #0f172a;
+            --brand-primary: #06b6d4; 
+            --brand-accent: #22d3ee;  
+            
+            --bg-page: #f1f7fd;       
+            --bg-card: rgba(255, 255, 255, 0.95); 
+            --border-color: #cbd5e1;  
+            
+            --text-main: #1e293b;     
+            --text-muted: #64748b;
+            
+            --danger: #ef4444;
+            --success: #10b981;
+            
+            --pool-color: #8b5cf6; 
+            --pool-off: #94a3b8;
+        }
+
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg-page);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(34, 211, 238, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 0; 
+            line-height: 1.5; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+        
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 1.5rem; 
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .brand-logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1;
+        }
+        
+        .brand-pond {
+            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 1px 2px rgba(6, 182, 212, 0.2));
+        }
+        
+        .brand-cast { color: var(--brand-dark); }
+
+        .role-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--brand-dark);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .role-badge.client { background: #64748b; }
+
+        .topology-wrapper {
+            display: flex;
+            background: #ffffff;
+            background-image: 
+                linear-gradient(#e2e8f0 1px, transparent 1px), 
+                linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 16px; 
+            margin-bottom: 20px; 
+            height: 400px; 
+            border: 1px solid var(--border-color);
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+                0 10px 15px -3px rgba(0, 0, 0, 0.03),
+                inset 0 0 40px rgba(0,0,0,0.02);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .feed-panel {
+            width: 300px; 
+            border-right: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(8px);
+            display: flex; flex-direction: column;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        
+        .feed-header {
+            padding: 12px 16px; 
+            font-weight: 700; 
+            color: var(--text-main); 
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 8px;
+            background: #f8fafc;
+        }
+        
+        .feed-list { flex: 1; overflow-y: auto; padding: 12px; }
+        .feed-list::-webkit-scrollbar { width: 4px; }
+        .feed-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .feed-item {
+            font-size: 0.8rem; 
+            padding: 10px; 
+            border-radius: 8px; 
+            background: white;
+            border: 1px solid #e2e8f0; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            display: flex; gap: 10px; align-items: flex-start;
+            margin-bottom: 8px; 
+            transition: transform 0.2s;
+        }
+        .feed-item:hover { border-color: #cbd5e1; }
+        .feed-item:last-child { margin-bottom: 0; }
+        
+        .feed-item.animate-in {
+            animation: slideInFeed 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes slideInFeed {
+            0% { opacity: 0; transform: translateY(-10px); max-height: 0; margin-bottom: 0; padding: 0 10px; border-width: 0; }
+            50% { opacity: 0.5; max-height: 100px; margin-bottom: 8px; padding: 10px; border-width: 1px; }
+            100% { opacity: 1; transform: translateY(0); max-height: 200px; }
+        }
+
+        .feed-icon { margin-top: 1px; flex-shrink: 0; font-size: 1.1em; }
+        .feed-content { flex: 1; word-break: break-all; color: var(--text-main); line-height: 1.4; }
+        .feed-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
+
+        .canvas-panel {
+            flex: 1;
+            position: relative;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.5) 0%, rgba(241,245,249,0.5) 100%);
+        }
+        canvas { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 1; }
+        .topo-nodes { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 2; pointer-events: none; }
+        
+        .topo-node { position: absolute; width: 0; height: 0; display: block; z-index: 2; }
+        
+        .node-icon { 
+            width: 44px; height: 44px; 
+            min-width: 44px; min-height: 44px; 
+            position: absolute; left: 0; top: 0;
+            transform: translate(-50%, -50%);
+            background: white; border-radius: 50%; 
+            display:flex; align-items:center; justify-content:center;
+            font-size: 22px; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--text-main); 
+            color: var(--text-main);
+            z-index: 4; 
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .node-label { 
+            position: absolute; left: 0; top: 0; 
+            font-size: 0.7rem; color: var(--text-main); 
+            background: rgba(255,255,255,0.95); padding: 3px 8px; border-radius: 12px; 
+            white-space: nowrap; font-weight: 700;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transform: translate(-50%, 0); 
+            z-index: 3;
+            transition: opacity 0.3s;
+        }
+        .node-me .node-label { color: #065f46; background: #d1fae5; border-color: #34d399; }
+        
+        .node-active .node-icon {
+            transform: translate(-50%, -50%) scale(1.15);
+            box-shadow: 0 0 0 4px rgba(var(--active-color-rgb), 0.2), 0 4px 12px rgba(var(--active-color-rgb), 0.4);
+            border-color: transparent; 
+        }
+
+        .topo-status-label {
+            position: absolute; top: 15px; right: 15px; z-index: 3;
+            font-size: 0.7rem; color: var(--text-muted); font-weight: 700;
+            background: rgba(255,255,255,0.8); padding: 4px 10px; border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .section { 
+            background: var(--bg-card); 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03), 0 6px 12px -2px rgba(0,0,0,0.06);
+            margin-bottom: 20px; 
+            border: 1px solid var(--border-color); 
+        }
+
+        .section-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 15px; padding-bottom: 12px; 
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section-title { 
+            font-weight: 700; font-size: 1rem; 
+            display: flex; align-items: center; gap: 8px; color: var(--text-main); 
+        }
+
+        .upload-zone { 
+            border: 2px dashed #cbd5e1; 
+            border-radius: 10px; padding: 30px; 
+            text-align: center; cursor: pointer; 
+            transition: all 0.2s ease; 
+            position: relative; 
+            background: #f8fafc;
+        }
+        .upload-zone:hover, .upload-zone.dragover { 
+            border-color: var(--brand-primary); 
+            background: #ecfeff; 
+            color: var(--brand-primary);
+        }
+        .upload-zone input { position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0; cursor: pointer; }
+
+        .file-list { list-style: none; padding: 0; margin: 0; }
+        .file-item { 
+            display: flex; align-items: center; 
+            padding: 12px; 
+            border-bottom: 1px solid #f1f5f9; 
+            transition: background 0.1s;
+        }
+        .file-item:last-child { border-bottom: none; }
+        .file-item:hover { background: #f8fafc; }
+        
+        .file-icon { font-size: 1.6rem; color: #94a3b8; margin-right: 12px; }
+        .file-info { flex: 1; overflow: hidden; }
+        .file-name { font-weight: 600; font-size: 0.9rem; color: var(--text-main); margin-bottom: 2px; }
+        .file-meta { font-size: 0.75rem; color: var(--text-muted); }
+
+        .btn-group { display: flex; gap: 8px; }
+        .btn { 
+            padding: 6px 14px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; 
+            font-size: 0.85rem; font-weight: 600;
+            display: flex; align-items: center; gap: 6px; 
+            text-decoration: none; transition: all 0.15s;
+        }
+        .btn:active { transform: translateY(1px); }
+
+        .btn-primary { 
+            background: var(--brand-primary); 
+            color: white; 
+            border-color: #0891b2; 
+            box-shadow: 0 2px 4px rgba(6, 182, 212, 0.2);
+        }
+        .btn-primary:hover { background: #0891b2; }
+
+        .btn-download { background: white; color: var(--text-main); border-color: #cbd5e1; }
+        .btn-download:hover { background: #f1f5f9; border-color: #94a3b8; }
+
+        .btn-delete { background: #fff1f2; color: var(--danger); border-color: #fecaca; }
+        .btn-delete:hover { background: #fee2e2; border-color: #fca5a5; }
+
+        .btn-danger { background: var(--danger); color: white; border-color: #dc2626; }
+        .btn-danger:hover { background: #dc2626; }
+
+        .server-card {
+            background: white; 
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--brand-primary);
+            border-radius: 12px; padding: 16px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .server-card-content { display: flex; align-items: center; gap: 15px; flex: 1; }
+        .server-icon-box {
+            width: 44px; height: 44px; border-radius: 10px; background: #ecfeff;
+            color: var(--brand-primary); display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            border: 1px solid #cffafe;
+        }
+        .server-details { display: flex; flex-direction: column; }
+        .server-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;}
+        .server-url { 
+            font-family: 'Monaco', 'Consolas', monospace; 
+            color: var(--brand-dark); 
+            font-size: 1rem; font-weight: 700; 
+            cursor: pointer; display: flex; align-items: center; gap: 8px; 
+            padding: 2px 6px; margin-left: -6px; border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .server-url:hover { background: #f1f5f9; color: var(--brand-primary); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; }
+        
+        .server-locked .status-dot { background: var(--danger); }
+        .server-locked .server-icon-box { background: #fef2f2; color: var(--danger); border-color: #fee2e2; }
+        .server-locked .server-card { border-left-color: var(--danger); }
+
+        .switch-container { display: flex; align-items: center; gap: 8px; margin-right: 12px; }
+        .switch-label { font-size: 0.85rem; font-weight: 600; color: var(--pool-color); }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        input:checked + .slider { background-color: var(--pool-color); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .ip-group { margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; }
+        .ip-header { font-size: 0.8rem; background: #f8fafc; padding: 8px 12px; font-weight: 600; display:flex; justify-content:space-between; border-bottom: 1px solid #e2e8f0; color: #475569; }
+        .ip-server .ip-header { background: #ecfeff; color: var(--brand-primary); }
+        .ip-me .ip-header { background: #f0fdf4; color: var(--success); }
+
+        .progress-container { margin-top: 12px; display: none; }
+        .progress-bar { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--brand-primary); width: 0%; transition: width 0.1s; }
+        
+        .toast { 
+            position: fixed; bottom: 30px; right: 30px; 
+            background: var(--brand-dark); color: white; 
+            padding: 10px 20px; border-radius: 8px; 
+            font-weight: 500; font-size: 0.9rem;
+            z-index: 1000; animation: slideIn 0.3s; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); 
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .topology-wrapper { flex-direction: column; height: 500px; }
+            .canvas-panel { width: 100%; height: 60%; order: 1; }
+            .feed-panel { width: 100%; height: 40%; order: 2; border-right: none; border-top: 1px solid var(--border-color); }
+            header { flex-direction: column; gap: 15px; align-items: flex-start; }
+            header > div { width: 100%; justify-content: space-between; }
+            .logo-container { width: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo-container">
+            <div class="brand-logo">
+                <span class="brand-pond">Pond</span><span class="brand-cast">Cast</span>
+            </div>
+            {% if is_admin %}
+            <span class="role-badge">Server</span>
+            {% else %}
+            <span class="role-badge client">Client</span>
+            {% endif %}
+        </div>
+        <div style="display:flex; gap:12px; align-items:center;">
+            {% if is_admin %}
+            <div class="switch-container">
+                <span class="switch-label">文件池</span>
+                <label class="switch">
+                    <input type="checkbox" id="poolToggle" onchange="togglePool()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <button id="lockBtn" class="btn btn-danger" onclick="toggleLock()">
+                <span class="iconify" data-icon="heroicons:lock-open"></span>
+                <span id="lockText" class="btn-text">运行中</span>
+            </button>
+            {% endif %}
+        </div>
+    </header>
+    
+    <div class="topology-wrapper">
+        <div class="feed-panel">
+            <div class="feed-header">
+                <span class="iconify" data-icon="heroicons:bolt" style="color:var(--brand-accent)"></span>
+                实时动态 (Live Feed)
+            </div>
+            <div id="feedList" class="feed-list"></div>
+        </div>
+        <div class="canvas-panel">
+            <canvas id="topoCanvas"></canvas>
+            <div class="topo-nodes" id="topoNodes"></div>
+            <div class="topo-status-label" id="topoLabel">Network Topology</div>
+        </div>
+    </div>
+
+    {% if is_admin %}
+    <div id="serverStatusBox" class="server-card">
+        <div class="server-card-content">
+            <div class="server-icon-box">
+                <span class="iconify" data-icon="heroicons:wifi"></span>
+            </div>
+            <div class="server-details">
+                <div class="server-label">本机服务地址 (Local Address)</div>
+                <div class="server-url" onclick="copyUrl()" title="点击复制">
+                    <span class="status-dot"></span>
+                    <span id="serverUrlText">http://{{ local_ips[0] }}:{{ port }}</span>
+                    <span class="iconify" data-icon="heroicons:clipboard-document" style="color:#94a3b8; font-size:0.8em; margin-left:4px;"></span>
+                </div>
+            </div>
+        </div>
+        <div style="font-size:0.9rem; color:var(--text-muted); font-family: 'Monaco', 'Consolas', monospace;">
+             PORT: <strong>{{ port }}</strong>
+        </div>
+    </div>
+    {% endif %}
+
+    <div id="section-release" class="section">
+        <div class="section-header">
+            <div class="section-title"><span class="iconify" data-icon="heroicons:share" style="color:var(--brand-primary)"></span> 公共文件 (Shared)</div>
+            <button class="btn btn-primary" onclick="refreshFiles()"><span class="iconify" data-icon="heroicons:arrow-path"></span> 刷新</button>
+        </div>
+        <div id="releaseList" class="file-list"><div style="text-align:center; color:var(--text-muted); padding:20px;">加载中...</div></div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="section-title"><span class="iconify" data-icon="heroicons:arrow-up-tray" style="color:var(--brand-primary)"></span> 上传文件 (Upload)</div>
+        </div>
+        <div class="upload-zone" id="dropZone">
+            <input type="file" id="fileInput" multiple onchange="handleFiles(this.files)">
+            <span class="iconify" data-icon="heroicons:cloud-arrow-up" style="font-size: 3rem; color: var(--brand-accent); opacity: 0.8; margin-bottom:10px;"></span>
+            <p style="color:var(--text-muted); font-weight:500;">点击或拖拽文件到此处</p>
+        </div>
+        <div class="progress-container" id="progressBox">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div style="text-align:right; font-size:0.8rem; color:var(--text-muted); margin-top:5px;" id="progressText">0%</div>
+        </div>
+    </div>
+
+    <div id="section-received" class="section">
+        <div class="section-header">
+            <div class="section-title" id="receivedTitle"><span class="iconify" data-icon="heroicons:inbox-arrow-down" style="color:var(--brand-primary)"></span> 接收箱 (Inbox)</div>
+        </div>
+        <div id="receivedList" class="file-list"><div style="text-align:center; color:var(--text-muted); padding:20px;">等待刷新...</div></div>
+    </div>
+</div>
+
+<script>
+    const isServer = {{ 'true' if is_admin else 'false' }};
+    let currentPoolMode = false;
+    let myIp = '';
+
+    // ================= Topology System =================
+    class TopologySystem {
+        constructor() {
+            this.canvas = document.getElementById('topoCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.container = document.getElementById('topoNodes');
+            this.nodes = []; 
+            this.nodeMap = new Map(); 
+            this.animationPulse = 0;
+            this.firstLoad = true;
+            
+            window.addEventListener('resize', () => { 
+                this.resize(); 
+                this.recalculateTargets(); 
+            });
+            this.resize();
+            this.loop();
+        }
+
+        resize() {
+            const panel = this.canvas.parentElement;
+            this.canvas.width = panel.offsetWidth;
+            this.canvas.height = panel.offsetHeight;
+        }
+
+        // --- Core: Sync API data to Node instances ---
+        syncNodes(rawClients) {
+            const centerIsPool = currentPoolMode;
+            const centerLabel = centerIsPool ? '文件池' : (isServer ? '服务器 (我)' : '服务器');
+            const centerIcon = centerIsPool ? 'heroicons:sparkles' : 'heroicons:server-stack';
+            const centerColor = centerIsPool ? '#8b5cf6' : '#3b82f6';
+
+            let nextData = [];
+            nextData.push({ id: 'CENTER', type: 'center', label: centerLabel, icon: centerIcon, color: centerColor });
+            
+            rawClients.forEach(c => {
+                let icon = 'heroicons:computer-desktop';
+                if(c.type === 'server') icon = 'heroicons:server';
+                else if(c.device_type === 'mobile') icon = 'heroicons:device-phone-mobile';
+
+                const isMe = c.ip === myIp;
+                let label = isMe ? '我' : (c.type === 'server' ? 'Server' : c.ip);
+                if (isMe && isServer && c.type === 'server') label = '服务器 (我)';
+                
+                let color = '#64748b';
+                if(c.status === 'upload') color = '#3b82f6';
+                if(c.status === 'download') color = '#22c55e';
+                if(isMe) color = '#22c55e';
+                if(c.type === 'server') color = '#f59e0b';
+
+                nextData.push({ id: c.ip, type: 'leaf', label: label, icon: icon, color: color, status: c.status, isMe: isMe });
+            });
+
+            const newMap = new Map();
+            nextData.forEach(data => {
+                let node = this.nodeMap.get(data.id);
+                if (!node) {
+                    node = { 
+                        ...data, 
+                        x: this.canvas.width/2, y: this.canvas.height/2, 
+                        targetX: this.canvas.width/2, targetY: this.canvas.height/2,
+                        opacity: 0,
+                        element: this.createDOM(data) 
+                    };
+                    // 修复：创建新节点后立即更新内容
+                    this.updateDOMContent(node);
+                } else {
+                    Object.assign(node, data);
+                    this.updateDOMContent(node);
+                    node.pendingDelete = false;
+                }
+                newMap.set(data.id, node);
+            });
+
+            this.nodes.forEach(n => {
+                if (!newMap.has(n.id)) n.pendingDelete = true;
+            });
+
+            this.nodeMap = newMap;
+            this.nodes = Array.from(this.nodeMap.values()).concat(this.nodes.filter(n => n.pendingDelete));
+
+            this.recalculateTargets();
+            
+            if (this.firstLoad && this.nodes.length > 0) {
+                this.nodes.forEach(n => {
+                    n.x = n.targetX;
+                    n.y = n.targetY;
+                    n.opacity = 1;
+                });
+                this.firstLoad = false;
+            }
+        }
+
+        createDOM(node) {
+            const div = document.createElement('div');
+            div.className = 'topo-node';
+            div.innerHTML = `<div class="node-icon"><span class="iconify"></span></div><div class="node-label"></div>`;
+            this.container.appendChild(div);
+            return div;
+        }
+
+        updateDOMContent(node) {
+            const iconEl = node.element.querySelector('.node-icon');
+            const labelEl = node.element.querySelector('.node-label');
+            const iconSpan = iconEl.querySelector('.iconify');
+            
+            iconSpan.setAttribute('data-icon', node.icon);
+            let iconStyle = `color:${node.color};`;
+            if(node.type === 'center') iconStyle = `color:${node.color}; border: 3px solid ${node.color};`;
+            iconEl.setAttribute('style', iconStyle);
+
+            labelEl.textContent = node.label;
+            node.element.className = 'topo-node' + (node.isMe ? ' node-me' : '');
+            
+            if (node.status === 'upload' || node.status === 'download') {
+                node.element.classList.add('node-active');
+                let rgb = this.hexToRgb(node.color);
+                node.element.style.setProperty('--active-color-rgb', `${rgb.r},${rgb.g},${rgb.b}`);
+            } else {
+                node.element.classList.remove('node-active');
+            }
+        }
+
+        // --- Physics Engine ---
+        recalculateTargets() {
+            const activeNodes = this.nodes.filter(n => !n.pendingDelete);
+            if(activeNodes.length === 0) return;
+
+            const width = this.canvas.width;
+            const height = this.canvas.height;
+            const cx = width / 2;
+            const cy = height / 2;
+            const centerIdx = activeNodes.findIndex(n => n.type === 'center');
+            const radius = Math.min(width, height) * 0.35;
+            
+            if (activeNodes.length <= 1) {
+                activeNodes[0].tx = cx; activeNodes[0].ty = cy;
+            } else {
+                 const step = (Math.PI * 2) / (activeNodes.length - 1);
+                 let c = 0;
+                 activeNodes.forEach((n, i) => {
+                     if(i === centerIdx) { n.tx = cx; n.ty = cy; }
+                     else {
+                         const angle = c * step;
+                         n.tx = cx + Math.cos(angle) * radius;
+                         n.ty = cy + Math.sin(angle) * radius;
+                         c++;
+                     }
+                 });
+            }
+
+            for(let k=0; k<150; k++) {
+                activeNodes.forEach((n, i) => {
+                    if (n.type === 'center' && activeNodes.length > 2) return; 
+
+                    let fx = 0, fy = 0;
+                    activeNodes.forEach((other, j) => {
+                        if(i === j) return;
+                        let dx = n.tx - other.tx;
+                        let dy = n.ty - other.ty;
+                        let dsq = dx*dx + dy*dy + 0.1;
+                        let f = 5000 / dsq;
+                        let dist = Math.sqrt(dsq);
+                        fx += (dx/dist) * f;
+                        fy += (dy/dist) * f;
+                        
+                        // AABB Box Collision
+                        let minDistX = 110; 
+                        let minDistY = 70;
+                        if (Math.abs(dx) < minDistX && Math.abs(dy) < minDistY) {
+                            let pushX = (minDistX - Math.abs(dx)) * (dx >= 0 ? 1 : -1);
+                            let pushY = (minDistY - Math.abs(dy)) * (dy >= 0 ? 1 : -1);
+                            if (Math.abs(pushX) < Math.abs(pushY)) fx += pushX * 0.8;
+                            else fy += pushY * 0.8;
+                        }
+                    });
+                    
+                    if (n.type !== 'center' && centerIdx !== -1) {
+                        const cn = activeNodes[centerIdx];
+                        let dx = cn.tx - n.tx;
+                        let dy = cn.ty - n.ty;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        let f = (dist - 120) * 0.04;
+                        fx += (dx/dist) * f;
+                        fy += (dy/dist) * f;
+                    }
+
+                    const pad = 60;
+                    if(n.tx < pad) fx += (pad - n.tx);
+                    if(n.tx > width-pad) fx -= (n.tx - (width-pad));
+                    if(n.ty < pad) fy += (pad - n.ty);
+                    if(n.ty > height-pad) fy -= (n.ty - (height-pad));
+
+                    n.tx += fx * 0.8;
+                    n.ty += fy * 0.8;
+                });
+            }
+
+            if(activeNodes.length <= 2) {
+                let ax=0, ay=0;
+                activeNodes.forEach(n => { ax += n.tx; ay += n.ty; });
+                ax /= activeNodes.length; ay /= activeNodes.length;
+                let dx = cx - ax; let dy = cy - ay;
+                activeNodes.forEach(n => { n.targetX = n.tx + dx; n.targetY = n.ty + dy; });
+            } else {
+                activeNodes.forEach(n => { n.targetX = n.tx; n.targetY = n.ty; });
+            }
+
+            activeNodes.forEach(n => {
+                n.labelOffsetX = 0; n.labelOffsetY = 30; 
+                const offsets = [ {x:0, y:30}, {x:0, y:-30}, {x:40, y:0}, {x:-40, y:0} ];
+                for (let off of offsets) {
+                    let lx = n.targetX + off.x;
+                    let ly = n.targetY + off.y;
+                    let minD = Infinity;
+                    if (lx < 40 || lx > width-40 || ly < 20 || ly > height-20) minD = -1000;
+                    else {
+                        activeNodes.forEach(other => {
+                            if (n === other) return;
+                            let dx = lx - other.targetX;
+                            let dy = ly - other.targetY;
+                            let d = Math.sqrt(dx*dx + dy*dy);
+                            if (d < minD) minD = d;
+                        });
+                    }
+                    if (minD > 30) { n.labelOffsetX = off.x; n.labelOffsetY = off.y; break; }
+                }
+            });
+        }
+
+        loop() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.animationPulse += 0.2; 
+
+            this.nodes = this.nodes.filter(n => {
+                n.x += (n.targetX - n.x) * 0.1;
+                n.y += (n.targetY - n.y) * 0.1;
+                
+                if (n.pendingDelete) n.opacity -= 0.1;
+                else if (n.opacity < 1) n.opacity += 0.1;
+                
+                if (n.element) {
+                    n.element.style.left = n.x + 'px';
+                    n.element.style.top = n.y + 'px';
+                    n.element.style.opacity = Math.max(0, n.opacity);
+                    const lbl = n.element.querySelector('.node-label');
+                    if(lbl) lbl.style.transform = `translate(-50%, 0) translate(${n.labelOffsetX || 0}px, ${n.labelOffsetY || 30}px)`;
+                }
+
+                if (n.pendingDelete && n.opacity <= 0) {
+                    if(n.element) n.element.remove();
+                    return false;
+                }
+                return true;
+            });
+
+            const centerNode = this.nodes.find(n => n.type === 'center');
+            if (centerNode) {
+                this.ctx.beginPath();
+                this.nodes.forEach(n => {
+                    if (n === centerNode || n.opacity <= 0.1) return;
+                    this.ctx.moveTo(centerNode.x, centerNode.y); 
+                    this.ctx.lineTo(n.x, n.y);
+                });
+                this.ctx.strokeStyle = '#cbd5e1';
+                this.ctx.lineWidth = 1.5;
+                this.ctx.setLineDash([]);
+                this.ctx.stroke();
+
+                this.nodes.forEach(n => {
+                    if (n === centerNode || !['upload', 'download'].includes(n.status)) return;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(centerNode.x, centerNode.y);
+                    this.ctx.lineTo(n.x, n.y);
+                    
+                    this.ctx.strokeStyle = n.status === 'upload' ? '#3b82f6' : '#22c55e';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.setLineDash([8, 6]);
+                    this.ctx.lineDashOffset = (n.status === 'upload' ? 1 : -1) * this.animationPulse;
+                    this.ctx.stroke();
+                });
+            }
+
+            requestAnimationFrame(() => this.loop());
+        }
+        
+        hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0,g:0,b:0};
+        }
+    }
+
+    // ================= Logic =================
+    const topo = new TopologySystem();
+    let lastFeedId = 0;
+
+    function renderFeed(events) {
+        if (!events || events.length === 0) {
+            document.getElementById('feedList').innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:0.8rem;">暂无动态</div>';
+            return;
+        }
+
+        const newEvents = events.filter(e => e.id > lastFeedId);
+        
+        if (newEvents.length === 0) {
+            if (document.getElementById('feedList').children.length === 0 && events.length > 0) {
+                 let html = '';
+                 events.forEach(e => html += createFeedItemHTML(e, false));
+                 document.getElementById('feedList').innerHTML = html;
+                 lastFeedId = events[0].id;
+            }
+            return;
+        }
+
+        lastFeedId = events[0].id;
+        const list = document.getElementById('feedList');
+        if(list.innerText.includes('暂无动态')) list.innerHTML = '';
+
+        [...newEvents].reverse().forEach(e => {
+            const div = document.createElement('div');
+            div.className = 'feed-item animate-in';
+            div.innerHTML = createFeedItemInner(e);
+            list.prepend(div);
+        });
+    }
+
+    function createFeedItemHTML(e, animate) {
+        const cls = animate ? 'feed-item animate-in' : 'feed-item';
+        return `<div class="${cls}">${createFeedItemInner(e)}</div>`;
+    }
+
+    function createFeedItemInner(e) {
+        let icon = 'heroicons:information-circle';
+        let color = '#64748b';
+        if (e.type === 'upload') { icon = 'heroicons:arrow-up-tray'; color = '#3b82f6'; }
+        if (e.type === 'download') { icon = 'heroicons:arrow-down-tray'; color = '#22c55e'; }
+        if (e.type === 'delete') { icon = 'heroicons:trash'; color = '#ef4444'; }
+        if (e.type === 'join') { icon = 'heroicons:user-plus'; color = '#10b981'; }
+        if (e.type === 'leave') { icon = 'heroicons:user-minus'; color = '#f59e0b'; }
+        if (e.type === 'system') { icon = 'heroicons:cog-6-tooth'; color = '#8b5cf6'; }
+        if (e.type === 'pool_toggle') { 
+            icon = 'heroicons:sparkles'; 
+            color = e.msg.includes('关闭') ? 'var(--pool-off)' : 'var(--pool-color)'; 
+        }
+        return `
+            <div class="feed-icon" style="color:${color}"><span class="iconify" data-icon="${icon}"></span></div>
+            <div class="feed-content">
+                <div><strong style="color:${color}">${e.ip || 'System'}</strong> ${e.msg}</div>
+                <div class="feed-time">${e.time}</div>
+            </div>`;
+    }
+
+    function formatSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024; const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function showToast(msg) {
+        const div = document.createElement('div');
+        div.className = 'toast'; div.innerText = msg;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+    }
+
+    function copyUrl() {
+        const url = document.getElementById('serverUrlText').innerText;
+        navigator.clipboard.writeText(url).then(() => showToast('地址已复制'));
+    }
+
+    async function refreshFiles() {
+        try {
+            const stRes = await fetch('/api/status');
+            const stData = await stRes.json();
+            
+            if (stData.file_pool !== currentPoolMode) {
+                currentPoolMode = stData.file_pool;
+                updateModeUI();
+                if(isServer) {
+                    const toggle = document.getElementById('poolToggle');
+                    if(toggle) toggle.checked = currentPoolMode;
+                }
+            }
+            if(isServer) updateLockUI(stData.locked);
+
+            topo.syncNodes(stData.topology || []);
+            renderFeed(stData.events || []);
+            document.getElementById('topoLabel').innerText = currentPoolMode ? "File Pool Topology" : "Server Topology";
+
+            const resRec = await fetch('/api/files/received');
+            const recData = await resRec.json();
+            if(recData.my_ip) myIp = recData.my_ip;
+
+            if (currentPoolMode) {
+                document.getElementById('section-release').classList.add('hidden');
+                renderPool(recData.data, recData.my_ip);
+            } else {
+                document.getElementById('section-release').classList.remove('hidden');
+                const resRel = await fetch('/api/files/release');
+                renderRelease(await resRel.json());
+                renderReceived(recData);
+            }
+
+        } catch (e) { console.error(e); }
+    }
+
+    function updateModeUI() {
+        const title = document.getElementById('receivedTitle');
+        if(currentPoolMode) {
+            title.innerHTML = '<span class="iconify" data-icon="heroicons:sparkles" style="color:#8b5cf6"></span> 文件池 (Pool)';
+        } else {
+            title.innerHTML = isServer 
+                ? '<span class="iconify" data-icon="heroicons:inbox-arrow-down"></span> 接收箱 (Inbox)'
+                : '<span class="iconify" data-icon="heroicons:paper-airplane"></span> 我发送的文件 (Sent)';
+        }
+    }
+
+    function renderRelease(files) {
+        const container = document.getElementById('releaseList');
+        if (files.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">暂无共享文件</div>';
+            return;
+        }
+        let html = '';
+        files.forEach(f => { html += generateFileHTML(f, 'release', true, isServer); });
+        container.innerHTML = html;
+    }
+
+    function renderReceived(response) {
+        const container = document.getElementById('receivedList');
+        const data = response.data;
+        
+        if (response.role === 'client') {
+            if (data.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">尚未发送文件</div>';
+                return;
+            }
+            let html = '';
+            data.forEach(f => {
+                html += `
+                <li class="file-item">
+                    <span class="iconify file-icon" data-icon="heroicons:check-circle" style="color:var(--success)"></span>
+                    <div class="file-info">
+                        <div class="file-name">${f.name}</div>
+                        <div class="file-meta">${formatSize(f.size)} • 已发送</div>
+                    </div>
+                </li>`;
+            });
+            container.innerHTML = html;
+        } else {
+            renderGroupedFiles(container, data, null, true);
+        }
+    }
+
+    function renderPool(data, myIp) {
+        renderGroupedFiles(document.getElementById('receivedList'), data, myIp, isServer);
+    }
+
+    function renderGroupedFiles(container, data, myIp, canDelete) {
+        if (Object.keys(data).length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">池中空空如也</div>';
+            return;
+        }
+        let html = '';
+        const keys = Object.keys(data).sort((a,b) => {
+            if(a === 'Server') return -1; if(b === 'Server') return 1;
+            if(a === myIp) return -1; if(b === myIp) return 1;
+            return a.localeCompare(b);
+        });
+
+        for (const ip of keys) {
+            const files = data[ip];
+            const isMe = (ip === myIp);
+            const isServerGroup = (ip === 'Server');
+            let groupClass = isServerGroup ? 'ip-server' : (isMe ? 'ip-me' : '');
+            let label = isServerGroup ? '服务端共享' : (isMe ? ip + ' (我)' : ip);
+            
+            html += `<div class="ip-group ${groupClass}">
+                <div class="ip-header">
+                    <span><span class="iconify" data-icon="${isServerGroup ? 'heroicons:server' : 'heroicons:computer-desktop'}"></span> ${label}</span>
+                    <span>${files.length} Files</span>
+                </div>`;
+            
+            files.forEach(f => {
+                const type = f.is_server_file ? 'release' : 'received';
+                if (currentPoolMode && isMe && !isServerGroup) {
+                     html += `
+                    <li class="file-item">
+                        <span class="iconify file-icon" data-icon="heroicons:check-circle" style="color:var(--success)"></span>
+                        <div class="file-info">
+                            <div class="file-name">${f.name}</div>
+                            <div class="file-meta">${formatSize(f.size)} • 已上传</div>
+                        </div>
+                        <div class="btn-group">
+                             ${isServer ? `<button class="btn btn-delete" onclick="deleteFile('${type}', '${f.path_key}')"><span class="iconify" data-icon="heroicons:trash"></span></button>` : ''}
+                        </div>
+                    </li>`;
+                } else {
+                    html += generateFileHTML(f, type, true, isServer); 
+                }
+            });
+            html += `</div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    function generateFileHTML(f, type, canDownload, canDelete) {
+        return `
+        <li class="file-item">
+            <span class="iconify file-icon" data-icon="${f.is_server_file ? 'heroicons:star' : 'heroicons:document-text'}" style="${f.is_server_file ? 'color:orange' : ''}"></span>
+            <div class="file-info">
+                <div class="file-name" title="${f.name}">${f.name}</div>
+                <div class="file-meta">${formatSize(f.size)}</div>
+            </div>
+            <div class="btn-group">
+                ${canDownload ? `<a href="/download/${encodeURIComponent(f.path_key || f.name)}" class="btn btn-download" download><span class="iconify" data-icon="heroicons:arrow-down-tray"></span></a>` : ''}
+                ${canDelete ? `<button class="btn btn-delete" onclick="deleteFile('${type}', '${f.path_key || f.name}')"><span class="iconify" data-icon="heroicons:trash"></span></button>` : ''}
+            </div>
+        </li>`;
+    }
+
+    function handleFiles(files) {
+        if(files.length === 0) return;
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) formData.append('files', files[i]);
+        
+        const xhr = new XMLHttpRequest();
+        const pBox = document.getElementById('progressBox');
+        const pFill = document.getElementById('progressFill');
+        const pText = document.getElementById('progressText');
+        pBox.style.display = 'block';
+
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                pFill.style.width = percent + '%'; pText.innerText = percent + '%';
+            }
+        });
+        xhr.addEventListener('load', () => {
+            pBox.style.display = 'none'; pFill.style.width = '0%';
+            if (xhr.status >= 200 && xhr.status < 300) {
+                showToast('上传成功'); document.getElementById('fileInput').value = ''; 
+                refreshFiles();
+            } else showToast('上传失败');
+        });
+        xhr.open('POST', '/upload', true); xhr.send(formData);
+    }
+
+    async function deleteFile(type, path) {
+        if(!confirm('确定要删除此文件吗？')) return;
+        try {
+            const res = await fetch('/api/file/delete', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({type, path})
+            });
+            const data = await res.json();
+            if(data.success) { showToast('已删除'); refreshFiles(); }
+        } catch(e) { console.error(e); }
+    }
+
+    async function toggleLock() {
+        const res = await fetch('/api/toggle_lock', {method: 'POST'});
+        const data = await res.json();
+        updateLockUI(data.locked);
+    }
+
+    async function togglePool() {
+        const res = await fetch('/api/toggle_pool', {method: 'POST'});
+        const data = await res.json();
+        showToast(data.file_pool ? '文件池已开启' : '文件池已关闭');
+        refreshFiles();
+    }
+
+    function updateLockUI(locked) {
+        const btn = document.getElementById('lockBtn');
+        const txt = document.getElementById('lockText');
+        const box = document.getElementById('serverStatusBox');
+        if(!btn) return;
+        if (locked) {
+            btn.className = "btn btn-success"; btn.style.background = "var(--success)"; txt.innerText = "已锁定 (解锁)";
+            if(box) { box.classList.add('server-locked'); }
+        } else {
+            btn.className = "btn btn-danger"; btn.style.background = "var(--danger)"; txt.innerText = "运行中 (锁定)";
+            if(box) { box.classList.remove('server-locked'); }
+        }
+    }
+
+    refreshFiles();
+    setInterval(refreshFiles, 3000);
+</script>
+</body>
+</html>
