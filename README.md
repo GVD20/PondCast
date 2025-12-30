@@ -9,12 +9,12 @@
 </p>
 
 <p align="center">
-  无需安装 App · 浏览器即开即用 · 可视化网络拓扑 · 隐私保护
+  无需安装 App · 浏览器即开即用 · 可视化网络拓扑 · 系统托盘集成
 </p>
 
 <p align="center">
-  <a href="https://github.com/GVD20/PondCast/releases">
-    <img src="https://img.shields.io/github/v/release/GVD20/PondCast?color=22d3ee&label=Download&logo=github&style=flat-square" alt="Download">
+  <a href="https://github.com/[你的GitHub用户名]/PondCast/releases">
+    <img src="https://img.shields.io/github/v/release/[你的GitHub用户名]/PondCast?color=22d3ee&label=Download&logo=github&style=flat-square" alt="Download">
   </a>
   <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python Version">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
@@ -27,12 +27,12 @@
 
 **PondCast** 是一款轻量化、极简、现代化的局域网文件共享小工具。
 
-**PondCast** 将局域网视为一个 **“池塘 (Pond)”**，任何设备都可以向池中 **“投送 (Cast)”** 文件，或从中拾取文件。不同于传统点对点传输，PondCast 提供了一个**中心化的文件池**模式，即使发送者离线，文件依然保留在池中供他人下载。
+它将局域网视为一个 **“池塘 (Pond)”**，任何设备都可以向池中 **“投送 (Cast)”** 文件，或从中拾取文件。不同于传统点对点传输，PondCast 提供了一个**中心化的文件池**模式，即使发送者离线，文件依然保留在池中供他人下载。
 
 **核心亮点：**
-* **零客户端**：只有一台电脑运行软件，其他手机/平板/电脑只需浏览器即可互传。
-* **单文件运行**：无需安装 Python，下载即可运行（Windows/macOS/Linux）。
-* **可视化拓扑**：实时展示局域网内连接的设备及其传输状态。
+* **零客户端**：只有一台电脑运行服务端，其他手机/平板/电脑只需浏览器即可互传。
+* **单文件运行**：打包为独立可执行文件，无需安装 Python，下载即用。
+* **桌面级体验**：支持系统托盘运行，提供快捷菜单，不占用任务栏空间。
 
 ---
 
@@ -41,6 +41,9 @@
 * **💧 文件池模式 (Pool Mode)**：
     * 开启后，所有人上传的文件汇聚一处，局域网内任何人皆可下载。
     * 适合团队协作、家庭聚会照片分享、会议资料分发。
+* **🖥️ 系统托盘集成 (System Tray)**：
+    * 程序启动后自动最小化至系统托盘（右下角），后台静默运行。
+    * 右键托盘图标可快速打开网页、接收文件夹或退出程序。
 * **🔒 隐私保护**：
     * 关闭文件池模式时，仅管理员可管理文件。
     * 实时动态流会自动对他人上传的文件名进行脱敏处理（如 `pho***.jpg`），保护隐私。
@@ -49,7 +52,7 @@
     * 支持呼吸灯动画与流光连线效果。
 * **⚡ 极速部署**：
     * 自动检测可用端口（默认 8000，冲突则自动切换）。
-    * 自动获取局域网 IP 并生成访问链接。
+    * 启动后自动调用系统默认浏览器打开 Web 界面。
 
 ---
 
@@ -63,7 +66,8 @@
 
 ### 2. 运行
 * **Windows**: 直接双击 `.exe` 文件。
-    * *注意：首次运行若弹出防火墙提示，请务必勾选“允许访问专用网络”和“公用网络”，否则其他设备将无法连接。*
+    * *注意：程序启动后**没有窗口**，请查看屏幕右下角的蓝色 "P" 字托盘图标。*
+    * *首次运行若弹出防火墙提示，请务必勾选“允许访问专用网络”和“公用网络”。*
 * **macOS / Linux**:
     在终端中赋予执行权限并运行：
     ```bash
@@ -71,8 +75,11 @@
     ./PondCast_MacOS
     ```
 
-### 3. 使用
-程序启动后会自动打开默认浏览器。将屏幕上显示的 **局域网访问地址**（如 `http://192.168.1.5:8000`）发给局域网内的其他设备，它们即可开始互传文件。
+### 3. 使用与关闭
+* **访问**：程序会自动打开浏览器。将屏幕上显示的 **局域网访问地址** 发给其他设备即可。
+* **关闭**：
+    * **方法一**：点击网页右上角的 **电源图标** 按钮。
+    * **方法二**：在系统托盘图标上右键，选择 **Exit**。
 
 ---
 
@@ -131,7 +138,7 @@ pip install -r requirements.txt
 ```
 
 
-*(注：主要依赖为 `flask` 和 `pyinstaller`)*
+*(注：主要依赖为 `flask`, `pyinstaller`, `pystray`, `Pillow`)*
 3. **运行源码**
 ```bash
 python app.py
