@@ -13,8 +13,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/[你的GitHub用户名]/PondCast/releases">
-    <img src="https://img.shields.io/github/v/release/[你的GitHub用户名]/PondCast?color=22d3ee&label=Download&logo=github&style=flat-square" alt="Download">
+  <a href="https://github.com/GVD20/PondCast/releases">
+    <img src="https://img.shields.io/github/v/release/GVD20/PondCast?color=22d3ee&label=Download&logo=github&style=flat-square" alt="Download">
   </a>
   <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python Version">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
@@ -59,7 +59,7 @@
 ## 🚀 快速开始 (For Users)
 
 ### 1. 下载
-前往 [Releases 页面](https://github.com/[你的GitHub用户名]/PondCast/releases) 下载适合您系统的版本：
+前往 [Releases 页面](https://github.com/GVD20/PondCast/releases) 下载适合您系统的版本：
 * **Windows**: `PondCast_Windows.exe`
 * **macOS**: `PondCast_MacOS`
 * **Linux**: `PondCast_Linux`
@@ -125,7 +125,7 @@ PondCast 支持通过命令行参数或配置文件进行自定义。
 
 1. **克隆仓库**
 ```bash
-git clone [https://github.com/](https://github.com/)[你的GitHub用户名]/PondCast.git
+git clone [https://github.com/](https://github.com/)GVD20/PondCast.git
 cd PondCast
 
 ```
